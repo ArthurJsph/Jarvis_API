@@ -25,6 +25,15 @@ LOG_FILE = os.getenv("LOG_FILE", str(LOGS_DIR / "jarvis.log"))
 APP_NAME = os.getenv("APP_NAME", "Jarvis Remote Assistant")
 APP_VERSION = os.getenv("APP_VERSION", "1.0")
 
+# Defaults used by document managers
+DEFAULT_ENCODING = os.getenv("DEFAULT_ENCODING", "utf-8")
+DEFAULT_AUTHOR = os.getenv("DEFAULT_AUTHOR", "Jarvis")
+DEFAULT_ORGANIZATION = os.getenv("DEFAULT_ORGANIZATION", "")
+
+# Documents directory for Word/PPTX and other generated docs
+DOCUMENTS_DIR = BASE_DIR / "documents"
+DOCUMENTS_DIR.mkdir(exist_ok=True)
+
 # NOTE: LLM backends removed in task-based assistant conversion. If you previously used LLMs,
 # reintroduce configuration here (LLM_BACKEND, LLM_MODEL_PATH) and ensure the relevant
 # packages are present in the environment.

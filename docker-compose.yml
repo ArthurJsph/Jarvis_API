@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Backend - Python FastAPI
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_KEY=${API_KEY:-your-secure-api-key-here}
+    volumes:
+      - ./:/app
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./documents:/app/documents
+    networks:
+      - jarvis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Frontend - React + Vite + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jarvis-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - jarvis-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  jarvis-network:
+    driver: bridge
+
+volumes:
+  logs:
+  data:
+  documents:

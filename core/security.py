@@ -1,7 +1,8 @@
 import time
 import os
 from typing import Callable
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from dotenv import load_dotenv
 
@@ -43,31 +44,53 @@ def _allow_request(key: str) -> bool:
 
 class APIKeyAndRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable):
-        # Allow unauthenticated access to UI and static assets so users can load the page
-        # without an API key. Only protect API endpoints.
-        path = request.url.path or ""
-        # Public paths that should not require API key (GET only)
-        public_get_paths = ("/ui", "/", "/favicon.ico", "/openapi.json", "/docs", "/redoc")
-        # Allow common static/ui routes and well-known probes (browser devtools), so the UI can load
-        if request.method == "GET" and (path.startswith("/static") or path in public_get_paths or path.startswith("/.well-known")):
-            return await call_next(request)
+        try:
+            # Allow unauthenticated access to UI and static assets so users can load the page
+            # without an API key. Only protect API endpoints.
+            path = request.url.path or ""
+            # Public paths that should not require API key (GET only)
+            public_get_paths = ("/ui", "/", "/favicon.ico", "/openapi.json", "/docs", "/redoc")
+            # Allow common static/ui routes and well-known probes (browser devtools), so the UI can load
+            if request.method == "GET" and (path.startswith("/static") or path in public_get_paths or path.startswith("/.well-known")):
+                return await call_next(request)
 
-        # Allow CORS preflight and other safe methods through
-        if request.method == "OPTIONS":
-            return await call_next(request)
+            # Allow CORS preflight and other safe methods through
+            if request.method == "OPTIONS":
+                return await call_next(request)
 
-        # check api key header for protected endpoints
-        key = request.headers.get("x-api-key") or request.query_params.get("api_key")
-        if API_KEY is None:
-            # no API key configured -> server misconfiguration
-            raise HTTPException(status_code=500, detail="Server misconfiguration: API_KEY not set in environment")
+            # check api key header for protected endpoints
+            key = request.headers.get("x-api-key") or request.query_params.get("api_key")
+            if API_KEY is None:
+                # no API key configured -> server misconfiguration
+                return JSONResponse(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content={"detail": "Server misconfiguration: API_KEY not set"}
+                )
 
-        if key != API_KEY:
-            raise HTTPException(status_code=401, detail="Invalid API key")
+            if key != API_KEY:
+                return JSONResponse(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    content={"detail": "401 - Unauthorized - Invalid API key"}
+                )
 
-        # rate limit per key
-        if not _allow_request(key):
-            raise HTTPException(status_code=429, detail="Too many requests")
+            # rate limit per key
+            if not _allow_request(key):
+                return JSONResponse(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    content={"detail": "Too many requests - Rate limit exceeded"}
+                )
 
-        response = await call_next(request)
-        return response
+            response = await call_next(request)
+            return response
+        except HTTPException as exc:
+            # Handle HTTPExceptions cleanly
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": exc.detail}
+            )
+        except Exception as e:
+            # Catch any other exceptions
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": f"Internal server error: {str(e)}"}
+            )

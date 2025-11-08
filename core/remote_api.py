@@ -1,9 +1,14 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException, Body, Query
+import time
+import platform
+import sys
+from fastapi import FastAPI, HTTPException, Body, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from collections import deque
 from config import LOG_FILE, LOG_LEVEL, API_KEY
 from pydantic import BaseModel
@@ -11,10 +16,39 @@ from dotenv import load_dotenv
 
 from .security import APIKeyAndRateLimitMiddleware
 from .file_manager import list_dir, list_files, read_file, write_file, delete_file
+# optional managers
+try:
+    from .documentation_searcher import DocumentationSearcher
+except Exception:
+    DocumentationSearcher = None
+
+try:
+    from .git_manager import GitManager
+except Exception:
+    GitManager = None
+
+try:
+    from .word_manager import WordManager
+except Exception:
+    WordManager = None
+
+try:
+    from .powerpoint_manager import PowerPointManager
+except Exception:
+    PowerPointManager = None
 
 load_dotenv()
 
 app = FastAPI(title="Jarvis Remote Assistant API")
+
+# server start time for uptime calculations
+_APP_START_TIME = time.time()
+
+# instantiate optional managers lazily
+_doc_searcher = DocumentationSearcher() if DocumentationSearcher else None
+_git_manager = GitManager() if GitManager else None
+_word_manager = WordManager() if WordManager else None
+_ppt_manager = PowerPointManager() if PowerPointManager else None
 
 # Configure file logging so runtime logs are available to the UI / /logs endpoint.
 # This attaches a FileHandler to the root logger and common uvicorn loggers.
@@ -40,7 +74,49 @@ for logger_name in ("uvicorn.error", "uvicorn.access", "fastapi"):
     if not any(isinstance(h, logging.FileHandler) and getattr(h, 'baseFilename', None) == os.path.abspath(LOG_FILE) for h in lg.handlers):
         lg.addHandler(file_handler)
 
-# Attach middleware
+# Custom exception handlers for clean error responses
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+@app.exception_handler(HTTPException)
+async def fastapi_http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Validation error", "errors": exc.errors()}
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    logging.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+# CORS configuration - add CORS BEFORE the APIKey middleware so preflight (OPTIONS)
+# requests and error responses include CORS headers. Use `CORS_ORIGINS` from env.
+cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
+cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins if cors_origins and cors_origins != ["*"] else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Then attach API key + rate limit middleware (so CORS runs first)
 app.add_middleware(APIKeyAndRateLimitMiddleware)
 
 # Serve static UI
@@ -101,7 +177,7 @@ async def ui_authed(api_key: str = None):
 
 
 @app.get("/logs")
-async def get_logs(lines: int = 200):
+async def get_logs(lines: int = 10):
     """Return the last `lines` lines from the log file as plain text.
 
     Protected by API key middleware.
@@ -150,6 +226,10 @@ async def capabilities():
         "execute": True,
         "logs": True,
         "llm": False,
+        "docs": bool(_doc_searcher),
+        "git": bool(_git_manager),
+        "word": bool(_word_manager),
+        "ppt": bool(_ppt_manager),
     }
 
 
@@ -184,6 +264,157 @@ async def api_read(path: str):
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/doc/search")
+async def doc_search(query: str, language: str = None):
+    if _doc_searcher is None:
+        raise HTTPException(status_code=404, detail="Documentation searcher not available")
+    try:
+        return _doc_searcher.search_docs(query, language)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/doc/cheatsheet")
+async def doc_cheatsheet(tool: str):
+    if _doc_searcher is None:
+        raise HTTPException(status_code=404, detail="Documentation searcher not available")
+    try:
+        return _doc_searcher.get_cheatsheet(tool)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/git/status")
+async def git_status():
+    if _git_manager is None:
+        raise HTTPException(status_code=404, detail="Git manager not available")
+    try:
+        return _git_manager.get_status()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/git/logs")
+async def git_logs(limit: int = 10):
+    if _git_manager is None:
+        raise HTTPException(status_code=404, detail="Git manager not available")
+    try:
+        return {"commits": _git_manager.get_log(limit)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/git/pull")
+async def git_pull(remote: str = "origin", branch: str = None):
+    if _git_manager is None:
+        raise HTTPException(status_code=404, detail="Git manager not available")
+    try:
+        ok = _git_manager.pull(remote, branch)
+        return {"ok": ok}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/git/push")
+async def git_push(remote: str = "origin", branch: str = None):
+    if _git_manager is None:
+        raise HTTPException(status_code=404, detail="Git manager not available")
+    try:
+        ok = _git_manager.push(remote, branch)
+        return {"ok": ok}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/git/clone")
+async def git_clone(url: str, directory: str = None):
+    if _git_manager is None:
+        raise HTTPException(status_code=404, detail="Git manager not available")
+    try:
+        ok = _git_manager.clone_repo(url, directory)
+        return {"ok": ok}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/word/create")
+async def word_create(filename: str = Body(...), title: str = Body(None), content: str = Body(None)):
+    if _word_manager is None:
+        raise HTTPException(status_code=404, detail="Word manager not available")
+    try:
+        ok = _word_manager.create_document(filename, title or "", content or "")
+        return {"ok": ok}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/word/read")
+async def word_read(filename: str):
+    if _word_manager is None:
+        raise HTTPException(status_code=404, detail="Word manager not available")
+    content = _word_manager.read_document(filename)
+    if content is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"filename": filename, "content": content}
+
+
+@app.post("/word/find_replace")
+async def word_find_replace(filename: str = Body(...), find_text: str = Body(...), replace_text: str = Body(...), output_file: str = Body(None)):
+    if _word_manager is None:
+        raise HTTPException(status_code=404, detail="Word manager not available")
+    ok = _word_manager.find_and_replace(filename, find_text, replace_text, output_file)
+    return {"ok": ok}
+
+
+@app.get("/word/info")
+async def word_info(filename: str):
+    if _word_manager is None:
+        raise HTTPException(status_code=404, detail="Word manager not available")
+    info = _word_manager.get_document_info(filename)
+    return info
+
+
+@app.post("/ppt/create")
+async def ppt_create(filename: str = Body(...), title: str = Body(None), subtitle: str = Body(None)):
+    if _ppt_manager is None:
+        raise HTTPException(status_code=404, detail="PowerPoint manager not available")
+    ok = _ppt_manager.create_presentation(filename, title or "", subtitle or "")
+    return {"ok": ok}
+
+
+@app.post("/ppt/add_slide")
+async def ppt_add_slide(filename: str = Body(...), slide_title: str = Body(...), content: str = Body(None)):
+    if _ppt_manager is None:
+        raise HTTPException(status_code=404, detail="PowerPoint manager not available")
+    ok = _ppt_manager.add_slide(filename, slide_title, content or "")
+    return {"ok": ok}
+
+
+@app.get("/ppt/info")
+async def ppt_info(filename: str):
+    if _ppt_manager is None:
+        raise HTTPException(status_code=404, detail="PowerPoint manager not available")
+    info = _ppt_manager.get_presentation_info(filename)
+    return info
+
+
+@app.get("/status")
+async def status():
+    uptime = time.time() - _APP_START_TIME
+    return {
+        "uptime_seconds": int(uptime),
+        "server_time": time.ctime(),
+        "platform": platform.platform(),
+        "python": sys.version.splitlines()[0],
+        "managers": {
+            "docs": bool(_doc_searcher),
+            "git": bool(_git_manager),
+            "word": bool(_word_manager),
+            "ppt": bool(_ppt_manager),
+        }
+    }
 
 
 @app.post("/files/write")
