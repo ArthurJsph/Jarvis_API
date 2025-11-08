@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Jarvis Remote Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <main class="app">
+      <nav class="topbar">
+        <div class="brand">Jarvis <span class="beta">Assistente Remoto</span></div>
+        <div class="top-actions">
+          <div class="auth">
+            <div id="auth_indicator" class="indicator auth-unknown" title="authentication status"></div>
+            <div id="auth_text" class="muted">Não verificado</div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card">
+            <h3>Conexão</h3>
+            <label class="label small">Chave API</label>
+            <div class="apikey-input inline">
+              <input id="api_key" type="password" placeholder="Insira sua API key (salve para reutilizar)" />
+              <button id="toggle_key" title="Mostrar/Ocultar">Mostrar</button>
+            </div>
+            <div class="card-actions">
+              <button id="save_key" class="secondary small">Salvar</button>
+              <button id="clear_key" class="secondary small">Limpar</button>
+            </div>
+            <hr />
+            <h3>Ações Rápidas</h3>
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+              <button id="btn_list_root">Listar raiz do projeto</button>
+              <div class="inline">
+                <input id="list_path" placeholder="pasta ou subpath (ex: core/)" />
+                <button id="btn_list_path" class="small">Listar</button>
+              </div>
+              <div class="inline">
+                <input id="read_path" placeholder="caminho do arquivo para ler (ex: README.md)" />
+                <button id="btn_read" class="small">Ler</button>
+              </div>
+              <div class="inline">
+                <input id="delete_path" placeholder="caminho do arquivo para apagar" />
+                <button id="btn_delete" class="small">Apagar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Logs</h3>
+            <div class="log-actions inline">
+              <button id="fetch_logs" class="small">Buscar logs</button>
+              <select id="log_lines" class="small">
+                <option value="100">100</option>
+                <option value="200" selected>200</option>
+                <option value="500">500</option>
+              </select>
+            </div>
+            <pre id="logs">(sem logs)</pre>
+          </div>
+        </aside>
+
+        <section class="main">
+          <div class="card">
+            <h2>Tarefas do Assistente</h2>
+            <p class="muted">Escolha uma tarefa pré-definida para executar rapidamente. Interface otimizada para rapidez.</p>
+
+            <div class="actions" style="margin-top:1rem">
+              <button id="btn_exec_list_root" class="primary">Executar: Listar raiz do projeto</button>
+              <button id="btn_exec_custom" class="secondary">Executar comando</button>
+            </div>
+
+            <!-- Toasts serão usados para mensagens flutuantes -->
+
+            <h3 style="margin-top:1rem">Escrever arquivo</h3>
+            <label class="label small">Caminho do arquivo</label>
+            <input id="write_path" placeholder="caminho do arquivo (ex: docs/nota.md)" />
+            <label class="label small">Conteúdo</label>
+            <textarea id="write_content" placeholder="Conteúdo do arquivo... (ex: # Título)" rows="8"></textarea>
+            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.5rem">
+              <label class="small"><input id="overwrite" type="checkbox" checked /> sobrescrever se existir</label>
+              <button id="btn_write" class="primary small">Escrever</button>
+            </div>
+
+            <h3>Resposta / Saída</h3>
+            <pre id="result">(sem saída ainda)</pre>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer muted">UI stores API key in localStorage for convenience. For production do not store secrets in the browser.</footer>
+
+      <script src="/static/app.js"></script>
+  </body>
+</html>

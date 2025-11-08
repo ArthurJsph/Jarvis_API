@@ -1,0 +1,80 @@
+/**
+ * {{ project_name }}
+ * {% if description %}{{ description }}{% else %}Servidor Node.js criado pelo Jarvis CLI{% endif %}
+ * 
+ * @author {{ author }}
+ * @date {{ date }}
+ */
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares
+app.use(helmet()); // Segurança
+app.use(cors()); // CORS
+app.use(morgan('combined')); // Logging
+app.use(express.json()); // Parse JSON
+app.use(express.urlencoded({ extended: true })); // Parse URL encoded
+
+// Rota principal
+app.get('/', (req, res) => {
+  res.json({
+    message: '🚀 {{ project_name }} está funcionando!',
+    version: '1.0.0',
+    author: '{{ author }}',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Rota de exemplo
+app.get('/api/example', (req, res) => {
+  res.json({
+    message: 'Esta é uma rota de exemplo',
+    data: {
+      id: 1,
+      name: 'Exemplo',
+      description: 'Dados de exemplo do {{ project_name }}'
+    }
+  });
+});
+
+// Middleware de tratamento de erros
+app.use((err, req, res, next) => {
+  console.error('❌ Erro:', err.stack);
+  res.status(500).json({
+    error: 'Algo deu errado!',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Erro interno do servidor'
+  });
+});
+
+// Middleware para rotas não encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Rota não encontrada',
+    path: req.originalUrl
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor {{ project_name }} rodando na porta ${PORT}`);
+  console.log(`📱 Acesse: http://localhost:${PORT}`);
+  console.log(`👤 Autor: {{ author }}`);
+});
+
+module.exports = app;

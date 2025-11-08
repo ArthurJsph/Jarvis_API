@@ -1,0 +1,41 @@
+
+
+requests>=2.31.0          
+colorama>=0.4.6          
+rich>=13.0.0             
+
+GitPython>=3.1.0         
+
+
+pip-api>=0.0.30          
+
+# Configuration
+pyyaml>=6.0              
+toml>=0.10.2             
+
+# Documentation and web scraping
+beautifulsoup4>=4.12.0   
+lxml>=4.9.0              
+
+# Development tools
+jinja2>=3.1.0            
+watchdog>=3.0.0          
+
+# Document manipulation
+openpyxl>=3.1.0         
+pandas>=2.0.0            
+python-docx>=0.8.11    
+python-pptx>=0.6.21      
+python-dotenv>=1.0.0    
+
+
+
+# Packages added for remote API and web UI
+fastapi>=0.103.0
+uvicorn>=0.23.0
+python-dotenv>=1.0.0
+reactpy>=0.18.0
+httpx>=0.24.0
+
+# Optional local LLM support (native compilation likely required):
+ 

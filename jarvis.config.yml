@@ -1,0 +1,223 @@
+# Jarvis Remote Assistant configuration
+# Arquivo de configuração principal para o servidor API/UI
+
+# Configurações gerais
+app:
+  name: "Jarvis Remote Assistant"
+  version: "1.0"
+  author: "Jarvis Team"
+  description: "Assistente remoto via API para automação e manipulação de arquivos"
+
+# Server / Remote API configuration
+server:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8000
+  ui_path: "web/ui.html"
+  static_dir: "web/static"
+
+# Note: LLM/chat backends were removed in this task-based assistant version.
+# If you need LLM support later, add a configuration block here (backend, model_path, etc.).
+
+# Security for remote API
+security:
+  require_api_key: true
+  api_key_env_var: "API_KEY"
+  rate_limit_requests: 60
+  rate_limit_period_seconds: 60
+
+# Interface
+# Interface configuration is now API/UI focused. UI assets are served from web/static
+interface:
+  ui_enabled: true
+  ui_url: "/ui"
+  static_dir: "web/static"
+
+# Funcionalidades
+features:
+  git_integration: true
+  package_manager: true
+  documentation_search: true
+  code_generation: true
+  task_manager: true
+  file_watcher: true
+  plugins: true
+
+# Geração de código
+code_generation:
+  default_author: "Jarvis"
+  default_license: "MIT"
+  templates_dir: "templates"
+  
+  # Linguagens suportadas para boilerplate
+  supported_languages:
+    - python
+    - javascript
+    - typescript
+    - react
+    - vue
+    - nodejs
+    - express
+    - flask
+    - django
+    - html
+    - css
+
+# Git Integration
+git:
+  auto_stage: false
+  default_commit_types:
+    - "feat: "
+    - "fix: "
+    - "docs: "
+    - "style: "
+    - "refactor: "
+    - "test: "
+    - "chore: "
+  
+  show_branch_in_prompt: true
+  auto_fetch: false
+
+# Package Management
+packages:
+  # Gestores suportados
+  managers:
+    python: "pip"
+    javascript: "npm"
+    typescript: "npm"
+    nodejs: "npm"
+    react: "npm"
+    vue: "npm"
+  
+  # URLs para busca de informações
+  registries:
+    npm: "https://registry.npmjs.org"
+    pypi: "https://pypi.org/pypi"
+
+# Documentação
+documentation:
+  sources:
+    - name: "MDN"
+      url: "https://developer.mozilla.org"
+      languages: ["html", "css", "javascript"]
+    
+    - name: "Python Docs"
+      url: "https://docs.python.org"
+      languages: ["python"]
+    
+    - name: "React Docs"
+      url: "https://react.dev"
+      languages: ["react", "jsx"]
+    
+    - name: "Node.js Docs"
+      url: "https://nodejs.org/docs"
+      languages: ["nodejs", "javascript"]
+
+# Cheatsheets
+cheatsheets:
+  enabled: true
+  sources:
+    git: "https://education.github.com/git-cheat-sheet-education.pdf"
+    docker: "https://dockerlabs.collabnix.com/docker/cheatsheet/"
+    regex: "https://regexr.com/"
+    bash: "https://devhints.io/bash"
+
+# Scripts e Aliases
+scripts:
+  # Aliases para comandos comuns
+  aliases:
+    dev: "npm run dev"
+    test: "npm test"
+    build: "npm run build"
+    start: "npm start"
+    install: "npm install"
+    
+    # Python aliases
+    py-test: "python -m pytest"
+    py-run: "python main.py"
+    py-install: "pip install -r requirements.txt"
+    
+    # Git aliases
+    gs: "git status"
+    ga: "git add ."
+    gc: "git commit -m"
+    gp: "git push"
+    gl: "git log --oneline"
+
+# Task Manager
+tasks:
+  enabled: true
+  storage_file: "data/tasks.json"
+  categories:
+    - "todo"
+    - "doing"
+    - "done"
+    - "bug"
+    - "feature"
+  
+  priorities:
+    - "low"
+    - "medium"
+    - "high"
+    - "urgent"
+
+# File Watcher
+watcher:
+  enabled: false
+  watch_patterns:
+    - "*.py"
+    - "*.js"
+    - "*.ts"
+    - "*.jsx"
+    - "*.tsx"
+    - "*.css"
+    - "*.html"
+  
+  ignore_patterns:
+    - "node_modules/*"
+    - "__pycache__/*"
+    - "*.pyc"
+    - ".git/*"
+    - "dist/*"
+    - "build/*"
+
+# Plugins (server-side)
+plugins:
+  enabled: true
+  directory: "plugins"
+  auto_load: true
+  available:
+    - name: "database_helper"
+      description: "Helpers para operações de banco de dados"
+      enabled: false
+    - name: "docker_manager"
+      description: "Gerencia containers Docker"
+      enabled: false
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/jarvis.log"
+  max_size: "10MB"
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Dados falsos
+fake_data:
+  locale: "pt_BR"
+  categories:
+    - "names"
+    - "emails"
+    - "phones"
+    - "addresses"
+    - "companies"
+    - "lorem"
+    - "dates"
+    - "numbers"
+
+# Performance
+performance:
+  cache_enabled: true
+  cache_timeout: 3600  # 1 hora
+  max_history: 1000
+  concurrent_requests: 5

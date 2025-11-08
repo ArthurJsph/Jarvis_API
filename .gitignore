@@ -1,0 +1,106 @@
+# Jarvis CLI - GitIgnore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+jarvis_env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.out
+
+# Arquivos de configuração sensíveis
+.env
+config.local.py
+*.key
+*.pem
+
+# Dados temporários
+temp/
+tmp/
+cache/
+.cache/
+
+# Documentos gerados (opcional)
+documents/*.xlsx
+documents/*.docx
+documents/*.pptx
+documents/*.pdf
+documents/*.txt
+documents/*.csv
+
+# Dados de teste
+data/test_*
+data/temp_*
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Arquivos específicos do projeto
+jarvis.local.yml
+
+# Node.js (para projetos gerados)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java (para projetos gerados)
+target/
+*.jar
+*.war
+*.ear
+
+# C# (para projetos gerados)
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Outros
+*.sqlite
+*.db
+.coverage
+htmlcov/

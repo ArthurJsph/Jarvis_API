@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""
+{{ project_name }}
+{% if description %}{{ description }}{% else %}Projeto Python criado pelo Jarvis CLI{% endif %}
+
+Autor: {{ author }}
+Data: {{ date }}
+"""
+
+import sys
+import os
+from typing import List, Dict, Optional
+
+__version__ = "1.0.0"
+__author__ = "{{ author }}"
+
+
+def main() -> None:
+    """
+    Função principal do programa
+    """
+    print(f"🐍 Bem-vindo ao {{ project_name }}!")
+    print(f"📦 Versão: {__version__}")
+    print(f"👤 Autor: {__author__}")
+    
+    # Seu código aqui
+    print("✨ Programa executado com sucesso!")
+
+
+def example_function(param: str) -> str:
+    """
+    Função de exemplo
+    
+    Args:
+        param (str): Parâmetro de exemplo
+    
+    Returns:
+        str: Resultado processado
+    """
+    return f"Processado: {param}"
+
+
+class ExampleClass:
+    """
+    Classe de exemplo
+    """
+    
+    def __init__(self, name: str):
+        """
+        Inicializa a classe
+        
+        Args:
+            name (str): Nome do objeto
+        """
+        self.name = name
+    
+    def greet(self) -> str:
+        """
+        Método de saudação
+        
+        Returns:
+            str: Mensagem de saudação
+        """
+        return f"Olá, eu sou {self.name}!"
+
+
+if __name__ == "__main__":
+    main()

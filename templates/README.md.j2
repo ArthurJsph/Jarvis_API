@@ -1,0 +1,55 @@
+# {{ project_name }}
+
+{% if description %}{{ description }}{% else %}Projeto criado pelo Jarvis CLI{% endif %}
+
+## 🚀 Instalação
+
+```bash
+# Clone o repositório
+git clone <repository-url>
+cd {{ project_name }}
+
+# Instale as dependências
+pip install -r requirements.txt
+```
+
+## 📦 Uso
+
+```python
+# Exemplo de uso
+python main.py
+```
+
+## 🧪 Testes
+
+```bash
+# Execute os testes
+python -m pytest
+```
+
+## 📝 Estrutura do Projeto
+
+```
+{{ project_name }}/
+├── main.py              # Arquivo principal
+├── requirements.txt     # Dependências
+├── tests/              # Testes
+├── src/                # Código fonte
+└── README.md           # Este arquivo
+```
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença {{ license }}. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+*Projeto gerado pelo Jarvis CLI v{{ jarvis_version }}*
