@@ -39,13 +39,15 @@ uvicorn core.remote_api:app --host 0.0.0.0 --port 8000 --reload
 
 Acessando a UI
 
- - Abra `http://localhost:8000/ui` no navegador. Insira sua `API_KEY` e use os botões para executar tarefas rápidas.
+ - Frontend principal: `http://localhost` (container frontend)
+ - Endpoint backend `/ui`: quando existir `web/ui.html`, ele serve a UI local; caso contrario redireciona para `FRONTEND_URL` (se definido) ou para `/docs`.
 
 Configuração (variáveis de ambiente)
 
 - Veja `.env.example`. Principais variáveis:
   - API_KEY — chave para autenticar requisições (usada pelo middleware)
   - HOST / PORT — bind do servidor
+  - FRONTEND_URL — URL do frontend para redirecionamento de `/ui` quando nao houver UI local no backend
   - OBS: configurações de backend de LLM foram removidas nesta release focada em tarefas;
     se você precisa de LLMs, veja a seção "Reativando LLMs (opcional)" abaixo.
 
@@ -59,14 +61,22 @@ Arquitetura (resumida)
 
 ```
 jarvis_assistente_api/
-├── core/                  # Lógica do servidor: API, segurança, file manager (LLM opcional)
-├── web/                   # UI estática e assets (servida em /ui e /static)
-├── data/                  # armazenamento local e cache
-├── templates/             # templates utilitários para geradores
-├── main.py                # entrypoint para rodar o servidor (convenience wrapper)
-├── requirements.txt       # dependências
-└── .env.example           # exemplo de variáveis de ambiente
+├── core/                  # Lógica do backend/API
+├── frontend/              # UI React + Vite
+├── docs/                  # Documentação técnica e histórico
+├── scripts/               # Scripts operacionais (start/automação)
+├── templates/             # Templates utilitários para geradores
+├── main.py                # Entry point do servidor
+├── docker-compose.yml     # Orquestração local com Docker
+└── requirements.txt       # Dependências Python
 ```
+
+Documentação e scripts
+- Guia de Docker: `docs/DOCKER_README.md`
+- Atualizações de frontend: `docs/FRONTEND_UPDATES.md`
+- Histórico de mudanças: `docs/UPDATES.md`
+- Start Linux/Mac: `scripts/start.sh`
+- Start Windows: `scripts/start.ps1`
 
 Notas de segurança e produção
 - O rate limiter atual é em memória e serve para uso pessoal. Para produção migre-o para Redis ou outro armazenamento compartilhado.

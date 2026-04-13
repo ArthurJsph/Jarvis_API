@@ -101,8 +101,8 @@ frontend/src/
 
 #### Scripts de Inicialização
 
-- `start.sh` - Quick start para Linux/Mac
-- `start.ps1` - Quick start para Windows PowerShell
+- `scripts/start.sh` - Quick start para Linux/Mac
+- `scripts/start.ps1` - Quick start para Windows PowerShell
 
 ## 🚀 Como Usar
 
@@ -117,7 +117,7 @@ npm run dev
 
 # Backend (separadamente)
 cd ..
-python -m uvicorn main:app --reload
+python -m uvicorn core.remote_api:app --reload
 # Acesse: http://localhost:8000
 ```
 
@@ -125,11 +125,11 @@ python -m uvicorn main:app --reload
 
 ```bash
 # Quick start (Windows)
-.\start.ps1
+.\scripts\start.ps1
 
 # Quick start (Linux/Mac)
-chmod +x start.sh
-./start.sh
+chmod +x scripts/start.sh
+./scripts/start.sh
 
 # Ou manualmente
 docker-compose up -d --build

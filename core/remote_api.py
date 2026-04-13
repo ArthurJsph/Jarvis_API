@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import time
 import platform
@@ -128,10 +129,14 @@ if os.path.isdir(static_dir):
 
 @app.get("/ui")
 async def ui():
+    frontend_url = os.getenv("FRONTEND_URL")
     ui_path = os.path.join(static_dir, "ui.html")
     if os.path.exists(ui_path):
         return FileResponse(ui_path)
-    raise HTTPException(status_code=404, detail="UI not found")
+    if frontend_url:
+        return RedirectResponse(url=frontend_url)
+    # Fallback to FastAPI docs when external frontend is used.
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/")
@@ -149,8 +154,14 @@ async def ui_authed(api_key: str = None):
     the key if it matches the configured server `API_KEY` environment value.
     """
     ui_path = os.path.join(static_dir, "ui.html")
+    frontend_url = os.getenv("FRONTEND_URL")
     if not os.path.exists(ui_path):
-        raise HTTPException(status_code=404, detail="UI not found")
+        if frontend_url:
+            joiner = "&" if "?" in frontend_url else "?"
+            if api_key:
+                return RedirectResponse(url=f"{frontend_url}{joiner}api_key={api_key}")
+            return RedirectResponse(url=frontend_url)
+        return RedirectResponse(url="/docs")
 
     # If no api_key provided, just serve the UI normally
     if not api_key:
@@ -165,7 +176,8 @@ async def ui_authed(api_key: str = None):
         with open(ui_path, "r", encoding="utf-8") as f:
             html = f.read()
 
-        injection = f"<script>try{{localStorage.setItem('jarvis_api_key_v1', '{api_key.replace("'","\\'")}');}}catch(e){{console.error(e);}}</script>"
+        api_key_js = json.dumps(api_key)
+        injection = f"<script>try{{localStorage.setItem('jarvis_api_key_v1', {api_key_js});}}catch(e){{console.error(e);}}</script>"
         if "</body>" in html:
             html = html.replace("</body>", injection + "</body>")
         else:

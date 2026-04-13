@@ -207,7 +207,7 @@ sudo chown -R $USER:$USER logs/ data/ documents/
 2. **Desabilite hot-reload no backend**:
    Edite o `Dockerfile` e remova `--reload` do CMD:
    ```dockerfile
-   CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+   CMD ["uvicorn", "core.remote_api:app", "--host", "0.0.0.0", "--port", "8000"]
    ```
 
 3. **Configure HTTPS no Nginx** (recomendado):

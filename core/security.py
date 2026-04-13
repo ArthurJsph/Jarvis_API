@@ -49,7 +49,15 @@ class APIKeyAndRateLimitMiddleware(BaseHTTPMiddleware):
             # without an API key. Only protect API endpoints.
             path = request.url.path or ""
             # Public paths that should not require API key (GET only)
-            public_get_paths = ("/ui", "/", "/favicon.ico", "/openapi.json", "/docs", "/redoc")
+            public_get_paths = (
+                "/",
+                "/health",
+                "/ui",
+                "/favicon.ico",
+                "/openapi.json",
+                "/docs",
+                "/redoc",
+            )
             # Allow common static/ui routes and well-known probes (browser devtools), so the UI can load
             if request.method == "GET" and (path.startswith("/static") or path in public_get_paths or path.startswith("/.well-known")):
                 return await call_next(request)

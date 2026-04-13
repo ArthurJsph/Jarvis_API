@@ -34,7 +34,7 @@ docker-compose.yml
 
 # Documentation
 README.md
-UPDATES.md
+docs/
 
 # Test files
 tests/
